@@ -9,6 +9,9 @@ import Dashboard from './pages/Dashboard'
 import Pricing from './pages/Pricing'
 import ApiDocs from './pages/ApiDocs'
 import ApiDashboard from './pages/ApiDashboard'
+import InvoiceHistory from './pages/InvoiceHistory'
+import Analytics from './pages/Analytics'
+import BatchUpload from './pages/BatchUpload'
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -48,6 +51,21 @@ function App() {
       <Route path="/api-dashboard" element={
         <ProtectedRoute>
           <ApiDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/invoices" element={
+        <ProtectedRoute>
+          <InvoiceHistory />
+        </ProtectedRoute>
+      } />
+      <Route path="/analytics" element={
+        <ProtectedRoute>
+          <Analytics />
+        </ProtectedRoute>
+      } />
+      <Route path="/batch" element={
+        <ProtectedRoute>
+          <BatchUpload />
         </ProtectedRoute>
       } />
 

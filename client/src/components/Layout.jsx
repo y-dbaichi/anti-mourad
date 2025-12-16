@@ -21,7 +21,7 @@ const Layout = ({ children }) => {
             <Link to="/" className="flex items-center gap-2">
               <span className="text-2xl font-bold text-gray-900">FormatX</span>
               <span className="px-2 py-0.5 text-xs font-medium bg-secondary-100 text-secondary-700 rounded">
-                BETA
+                v2
               </span>
             </Link>
 
@@ -36,8 +36,17 @@ const Layout = ({ children }) => {
 
               {isAuthenticated ? (
                 <>
-                  <Link to="/dashboard">
-                    <Button variant="ghost" size="sm">Dashboard</Button>
+                  <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                    Convertir
+                  </Link>
+                  <Link to="/batch" className="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                    Batch
+                  </Link>
+                  <Link to="/invoices" className="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                    Historique
+                  </Link>
+                  <Link to="/analytics" className="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                    Stats
                   </Link>
                   <Button variant="outline" size="sm" onClick={handleLogout}>
                     Deconnexion
