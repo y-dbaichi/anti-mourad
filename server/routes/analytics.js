@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { protect } = require('../middleware/auth');
 const Analytics = require('../models/Analytics');
 const Invoice = require('../models/Invoice');
@@ -65,8 +66,9 @@ router.get('/dashboard', protect, async (req, res) => {
     } : null;
 
     // Get recent invoices count by status
+    const userId = new mongoose.Types.ObjectId(req.user._id);
     const statusCounts = await Invoice.aggregate([
-      { $match: { userId: req.user._id, createdAt: { $gte: startDate } } },
+      { $match: { userId: userId, createdAt: { $gte: startDate } } },
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
 
@@ -157,10 +159,11 @@ router.get('/usage', protect, async (req, res) => {
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
+    const userIdObj = new mongoose.Types.ObjectId(req.user._id);
     const monthlyUsage = await Analytics.aggregate([
       {
         $match: {
-          userId: req.user._id,
+          userId: userIdObj,
           date: { $gte: twelveMonthsAgo }
         }
       },
@@ -213,10 +216,11 @@ router.get('/exports', protect, async (req, res) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    const userIdObj = new mongoose.Types.ObjectId(req.user._id);
     const exportStats = await Analytics.aggregate([
       {
         $match: {
-          userId: req.user._id,
+          userId: userIdObj,
           date: { $gte: thirtyDaysAgo }
         }
       },
@@ -244,7 +248,7 @@ router.get('/exports', protect, async (req, res) => {
 
     // Get recent exports from invoices
     const recentExports = await Invoice.aggregate([
-      { $match: { userId: req.user._id } },
+      { $match: { userId: userIdObj } },
       { $unwind: '$exports' },
       { $sort: { 'exports.exportedAt': -1 } },
       { $limit: 20 },
@@ -298,10 +302,11 @@ router.get('/financial', protect, async (req, res) => {
     }
 
     // Get financial summary from invoices
+    const userIdObj = new mongoose.Types.ObjectId(req.user._id);
     const financialData = await Invoice.aggregate([
       {
         $match: {
-          userId: req.user._id,
+          userId: userIdObj,
           createdAt: { $gte: startDate, $lte: endDate }
         }
       },
@@ -333,7 +338,7 @@ router.get('/financial', protect, async (req, res) => {
     const topClients = await Invoice.aggregate([
       {
         $match: {
-          userId: req.user._id,
+          userId: userIdObj,
           createdAt: { $gte: startDate, $lte: endDate }
         }
       },
@@ -352,7 +357,7 @@ router.get('/financial', protect, async (req, res) => {
     const monthlyTrend = await Invoice.aggregate([
       {
         $match: {
-          userId: req.user._id,
+          userId: userIdObj,
           createdAt: { $gte: startDate, $lte: endDate }
         }
       },
