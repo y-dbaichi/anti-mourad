@@ -19,7 +19,7 @@ const Layout = ({ children }) => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-gray-900">FormatX</span>
+              <span className="text-2xl font-bold text-gray-900">Mourad</span>
               <span className="px-2 py-0.5 text-xs font-medium bg-secondary-100 text-secondary-700 rounded">
                 BETA
               </span>
