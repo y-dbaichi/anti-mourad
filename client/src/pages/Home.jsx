@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import Layout from '../components/Layout'
 import UploadStep from '../components/steps/UploadStep'
@@ -18,6 +18,32 @@ const Home = () => {
   const [error, setError] = useState(null)
   const [extractedData, setExtractedData] = useState(null)
   const [pdfFile, setPdfFile] = useState(null)
+  const [extractionMode, setExtractionMode] = useState('cloud')
+  const [availableModes, setAvailableModes] = useState([])
+
+  // Fetch available extraction modes on mount
+  useEffect(() => {
+    const fetchModes = async () => {
+      try {
+        const response = await api.get('/facturex/modes')
+        if (response.data.success) {
+          setAvailableModes(response.data.modes)
+          // Default to first available mode
+          const firstAvailable = response.data.modes.find(m => m.available)
+          if (firstAvailable) {
+            setExtractionMode(firstAvailable.id)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch extraction modes:', err)
+        // Fallback to cloud mode only
+        setAvailableModes([
+          { id: 'cloud', name: 'Cloud (Groq)', description: 'Rapide (~3s), necessite internet', available: true }
+        ])
+      }
+    }
+    fetchModes()
+  }, [])
 
   const handleUpload = async (file) => {
     setLoading(true)
@@ -31,12 +57,19 @@ const Home = () => {
         const base64 = e.target.result.split(',')[1]
 
         try {
-          const response = await api.post('/facturex/extract', { pdfBase64: base64 })
+          const response = await api.post('/facturex/extract', {
+            pdfBase64: base64,
+            extractionMode: extractionMode
+          })
 
           if (response.data.success) {
             setExtractedData(response.data.data)
             setCurrentStep(2)
-            toast.success('Extraction reussie !')
+            const modeLabel = extractionMode === 'local' ? 'local' : 'cloud'
+            const timeInfo = response.data.extractionTime
+              ? ` (${(response.data.extractionTime / 1000).toFixed(1)}s)`
+              : ''
+            toast.success(`Extraction reussie en mode ${modeLabel}${timeInfo}`)
           } else {
             throw new Error(response.data.error || 'Extraction failed')
           }
@@ -130,6 +163,9 @@ const Home = () => {
               onUpload={handleUpload}
               loading={loading}
               error={error}
+              extractionMode={extractionMode}
+              onModeChange={setExtractionMode}
+              modes={availableModes}
             />
           )}
 

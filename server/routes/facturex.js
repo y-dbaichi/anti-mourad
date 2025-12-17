@@ -1,22 +1,46 @@
 const express = require('express');
 const { protect, optionalAuth } = require('../middleware/auth');
 const { extractTextFromBase64 } = require('../services/pdfService');
-const { extractInvoiceData } = require('../services/groqService');
+const { extractInvoiceData, checkHealth, getAvailableModes } = require('../services/extractionService');
 const { generateFactureX } = require('../services/xmlService');
 const { validateInvoiceData } = require('../utils/validators');
 const Subscription = require('../models/Subscription');
 
 const router = express.Router();
 
+// @route   GET /api/facturex/modes
+// @desc    Get available extraction modes
+// @access  Public
+router.get('/modes', async (req, res) => {
+  try {
+    const modes = await getAvailableModes();
+    const health = await checkHealth();
+
+    res.json({
+      success: true,
+      modes,
+      health
+    });
+  } catch (error) {
+    console.error('Modes error:', error);
+    res.status(500).json({ error: 'Failed to get extraction modes' });
+  }
+});
+
 // @route   POST /api/facturex/extract
 // @desc    Extract text from PDF and analyze with AI
 // @access  Private (or public with limits)
 router.post('/extract', optionalAuth, async (req, res) => {
   try {
-    const { pdfBase64 } = req.body;
+    const { pdfBase64, extractionMode = 'cloud' } = req.body;
 
     if (!pdfBase64) {
       return res.status(400).json({ error: 'PDF base64 data is required' });
+    }
+
+    // Validate extraction mode
+    if (!['cloud', 'local'].includes(extractionMode)) {
+      return res.status(400).json({ error: 'Invalid extraction mode. Use "cloud" or "local".' });
     }
 
     // Check subscription if user is logged in
@@ -43,9 +67,11 @@ router.post('/extract', optionalAuth, async (req, res) => {
       });
     }
 
-    // Analyze with AI
-    console.log('Analyzing with AI...');
-    const extractedData = await extractInvoiceData(pdfData.text);
+    // Analyze with AI (using selected mode)
+    console.log(`Analyzing with AI (${extractionMode} mode)...`);
+    const startTime = Date.now();
+    const extractedData = await extractInvoiceData(pdfData.text, extractionMode);
+    const extractionTime = Date.now() - startTime;
 
     // Validate extracted data
     const validation = validateInvoiceData(extractedData);
@@ -65,7 +91,9 @@ router.post('/extract', optionalAuth, async (req, res) => {
       pdfInfo: {
         pages: pdfData.numPages,
         textLength: pdfData.text.length
-      }
+      },
+      extractionMode,
+      extractionTime
     });
 
   } catch (error) {

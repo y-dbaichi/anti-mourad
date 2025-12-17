@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, AlertCircle } from 'lucide-react'
+import { Upload, AlertCircle, Cloud, Server } from 'lucide-react'
 
-const UploadStep = ({ onUpload, loading, error }) => {
+const UploadStep = ({ onUpload, loading, error, extractionMode, onModeChange, modes }) => {
   const onDrop = useCallback((acceptedFiles) => {
     const file = acceptedFiles[0]
     if (file) {
@@ -64,6 +64,49 @@ const UploadStep = ({ onUpload, loading, error }) => {
           <span>Traitement securise - Aucune donnee stockee</span>
         </p>
       </div>
+
+      {/* Extraction Mode Selector */}
+      {modes && modes.length > 0 && (
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm font-medium text-gray-700 mb-3">Mode d'extraction IA</p>
+          <div className="flex gap-3">
+            {modes.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => onModeChange(mode.id)}
+                disabled={!mode.available || loading}
+                className={`
+                  flex-1 p-3 rounded-lg border-2 transition-all text-left
+                  ${extractionMode === mode.id
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'}
+                  ${!mode.available ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                `}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  {mode.id === 'cloud' ? (
+                    <Cloud className={`h-4 w-4 ${extractionMode === mode.id ? 'text-primary-600' : 'text-gray-400'}`} />
+                  ) : (
+                    <Server className={`h-4 w-4 ${extractionMode === mode.id ? 'text-primary-600' : 'text-gray-400'}`} />
+                  )}
+                  <span className={`text-sm font-medium ${extractionMode === mode.id ? 'text-primary-700' : 'text-gray-700'}`}>
+                    {mode.name}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500">{mode.description}</p>
+              </button>
+            ))}
+          </div>
+          {extractionMode === 'local' && (
+            <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Mode local plus lent (~90s) mais 100% prive - aucune donnee envoyee
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
